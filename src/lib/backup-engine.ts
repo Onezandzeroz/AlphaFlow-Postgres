@@ -348,6 +348,14 @@ export async function createBackup(
   scope: BackupScope = 'tenant',
   meta?: Record<string, unknown>
 ): Promise<{ id: string; filePath: string; fileSize: number; sha256: string } | null> {
+  // Fetch denormalized reference data for DB readability (companyName + userEmail)
+  const [companyInfo, userInfo] = await Promise.all([
+    db.company.findUnique({ where: { id: companyId }, select: { name: true } }),
+    db.user.findUnique({ where: { id: userId }, select: { email: true } }),
+  ]);
+  const companyName = companyInfo?.name ?? null;
+  const userEmail = userInfo?.email ?? null;
+
   const backupDir = await ensureBackupDir(companyId, backupType);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const zipFilename = `snapshot-${scope}-${backupType}-${timestamp}.zip`;
@@ -369,7 +377,9 @@ export async function createBackup(
     const backup = await db.backup.create({
       data: {
         userId,
+        userEmail,
         companyId,
+        companyName,
         triggerType,
         backupType,
         scope,
@@ -418,7 +428,9 @@ export async function createBackup(
     await db.backup.create({
       data: {
         userId,
+        userEmail,
         companyId,
+        companyName,
         triggerType,
         backupType,
         scope,

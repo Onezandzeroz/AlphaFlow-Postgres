@@ -421,9 +421,10 @@ model AuditLog {
 model Backup {
   id            String   @id @default(cuid())
   userId        String
+  userEmail     String?                          // denormalized: tenant owner email for quick reference in DB dashboards
   triggerType   String
   backupType    String
-  scope         String   @default("tenant")   // "tenant" = tenant-specific JSON snapshot, "full-db" = entire SQLite database (appOwner only)
+  scope         String   @default("tenant")   // "tenant" = tenant-specific JSON snapshot
   filePath      String
   fileSize      Int
   sha256        String?
@@ -433,6 +434,7 @@ model Backup {
   createdAt     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   companyId     String
+  companyName   String?                          // denormalized: company name for quick reference in DB dashboards
   company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId])

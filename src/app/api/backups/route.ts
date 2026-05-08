@@ -35,6 +35,8 @@ export async function GET(request: NextRequest) {
         errorMessage: true,
         expiresAt: true,
         createdAt: true,
+        companyName: true,
+        userEmail: true,
       },
     });
 
@@ -89,6 +91,8 @@ export async function POST(request: NextRequest) {
         errorMessage: true,
         expiresAt: true,
         createdAt: true,
+        companyName: true,
+        userEmail: true,
       },
     });
 

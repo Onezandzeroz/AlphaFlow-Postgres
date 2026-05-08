@@ -62,6 +62,8 @@ interface BackupEntry {
   errorMessage: string | null;
   expiresAt: string;
   createdAt: string;
+  companyName: string | null;
+  userEmail: string | null;
 }
 
 interface BackupPageProps {
