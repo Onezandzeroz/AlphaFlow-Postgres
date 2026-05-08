@@ -54,7 +54,7 @@ interface BackupEntry {
   id: string;
   triggerType: 'manual' | 'automatic' | 'scheduled';
   backupType: 'hourly' | 'daily' | 'weekly' | 'monthly';
-  scope: 'tenant' | 'full-db';
+  scope: 'tenant';
   filePath: string;
   fileSize: number;
   sha256: string;
@@ -1748,15 +1748,8 @@ export function BackupPage({ user }: BackupPageProps) {
                       <Badge className={`text-[10px] sm:text-xs px-1.5 sm:px-2 ${getBackupTypeBadge(backup.backupType)}`}>
                         {backup.backupType}
                       </Badge>
-                      <Badge className={`text-[10px] sm:text-xs px-1.5 sm:px-2 ${
-                        backup.scope === 'full-db'
-                          ? 'bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border-purple-500/20'
-                          : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700'
-                      }`}>
-                        {backup.scope === 'full-db'
-                          ? (language === 'da' ? 'Fuld DB' : 'Full DB')
-                          : (language === 'da' ? 'Lejer' : 'Tenant')
-                        }
+                      <Badge className="text-[10px] sm:text-xs px-1.5 sm:px-2 bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700">
+                        {language === 'da' ? 'Lejer' : 'Tenant'}
                       </Badge>
                       {backup.status === 'completed' ? (
                         <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
@@ -1798,8 +1791,8 @@ export function BackupPage({ user }: BackupPageProps) {
                         </TooltipProvider>
                       )}
 
-                      {/* Restore — permission depends on scope */}
-                      {(backup.scope === 'full-db' ? isAppOwner : isTenantOwner) && (
+                      {/* Restore — tenant owners only */}
+                      {isTenantOwner && (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1864,14 +1857,9 @@ export function BackupPage({ user }: BackupPageProps) {
             <AlertDialogDescription asChild>
               <div className="space-y-3 pt-2">
                 <p className="text-gray-600 dark:text-gray-400">
-                  {restoreTarget?.scope === 'full-db'
-                    ? (language === 'da'
-                      ? 'ADVARSEL: Dette vil gendanne HELE databasen for alle lejere med data fra den valgte sikkerhedskopi. Denne handling kan ikke fortrydes!'
-                      : 'WARNING: This will restore the ENTIRE database for ALL tenants with data from the selected backup. This action cannot be undone!')
-                    : (language === 'da'
-                      ? 'Dette vil overskrive alle nuværende data for din lejer med data fra den valgte sikkerhedskopi. Andre lejere påvirkes ikke.'
-                      : 'This will overwrite all current data for your tenant with data from the selected backup. Other tenants are not affected.')
-                  }
+                  {language === 'da'
+                    ? 'Dette vil overskrive alle nuværende data for din lejer med data fra den valgte sikkerhedskopi. Andre lejere påvirkes ikke.'
+                    : 'This will overwrite all current data for your tenant with data from the selected backup. Other tenants are not affected.'}
                 </p>
 
                 {/* Backup details */}
@@ -1889,14 +1877,8 @@ export function BackupPage({ user }: BackupPageProps) {
                       <span className="text-gray-500 dark:text-gray-400">
                         {language === 'da' ? 'Omfang' : 'Scope'}:
                       </span>
-                      <span className={`font-medium ${
-                        restoreTarget.scope === 'full-db'
-                          ? 'text-purple-700 dark:text-purple-400'
-                          : 'text-gray-900 dark:text-white'
-                      }`}>
-                        {restoreTarget.scope === 'full-db'
-                          ? (language === 'da' ? 'Full database (alle lejere)' : 'Full database (all tenants)')
-                          : (language === 'da' ? 'Lejer-snapshot' : 'Tenant snapshot')}
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {language === 'da' ? 'Lejer-snapshot' : 'Tenant snapshot'}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">

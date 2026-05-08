@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getAuthContext } from '@/lib/session';
 import { Permission, requirePermission, blockOversightMutation } from '@/lib/rbac';
-import { createBackup, isAppOwnerCompany } from '@/lib/backup-engine';
+import { createBackup } from '@/lib/backup-engine';
 import { logger } from '@/lib/logger';
 
 /**
@@ -67,12 +67,8 @@ export async function POST(request: NextRequest) {
     const companyId = ctx.activeCompanyId;
     const userId = ctx.id;
 
-    // Determine backup scope: appOwner → full-db, regular tenants → tenant snapshot
-    const appOwner = ctx.isSuperDev || await isAppOwnerCompany(companyId);
-    const scope = appOwner ? 'full-db' : 'tenant';
-
-    // Manual backups are always 'hourly' type for retention purposes
-    const result = await createBackup(userId, 'manual', 'hourly', companyId, scope);
+    // All backups use tenant-snapshot scope (full-db removed after PostgreSQL migration)
+    const result = await createBackup(userId, 'manual', 'hourly', companyId, 'tenant');
 
     if (!result) {
       return NextResponse.json({ error: 'Failed to create backup' }, { status: 500 });
