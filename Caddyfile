@@ -1,0 +1,78 @@
+# AlphaFlow — Caddy Reverse Proxy Configuration
+#
+# This file configures Caddy as a reverse proxy for the Next.js app.
+# Caddy automatically handles HTTPS certificates via Let's Encrypt.
+#
+# === PRODUCTION CONFIG (domain-based, HTTPS) ===
+# Replace the domain below with your actual domain.
+
+alphaflow.dk, www.alphaflow.dk {
+    # Force HTTPS — redirect HTTP to HTTPS
+    # (Caddy does this automatically, but explicit for clarity)
+
+    # Reverse proxy to Next.js
+    reverse_proxy localhost:3000 {
+        header_up Host {host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_host}
+    }
+
+    # Security headers
+    header {
+        # HSTS — tell browsers to always use HTTPS (1 year)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+        # Prevent clickjacking
+        X-Frame-Options "SAMEORIGIN"
+
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+
+        # XSS protection
+        X-XSS-Protection "1; mode=block"
+
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+
+        # Permissions policy — disable unnecessary browser features
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+
+    # Gzip compression
+    encode gzip zstd
+
+    # Logging
+    log {
+        output file /var/log/caddy/alphaflow-access.log {
+            roll_size 50mb
+            roll_keep 5
+        }
+    }
+}
+
+# === DEVELOPMENT CONFIG (port-based gateway) ===
+# Uncomment this block for local development only.
+# Do NOT use both blocks at the same time.
+
+# :80 {
+#     @transform_port_query {
+#         query XTransformPort=*
+#     }
+#     handle @transform_port_query {
+#         reverse_proxy localhost:{query.XTransformPort} {
+#             header_up Host {host}
+#             header_up X-Forwarded-For {remote_host}
+#             header_up X-Forwarded-Proto {scheme}
+#             header_up X-Real-IP {remote_host}
+#         }
+#     }
+#     handle {
+#         reverse_proxy localhost:3000 {
+#             header_up Host {host}
+#             header_up X-Forwarded-For {remote_host}
+#             header_up X-Forwarded-Proto {scheme}
+#             header_up X-Real-IP {remote_host}
+#         }
+#     }
+# }

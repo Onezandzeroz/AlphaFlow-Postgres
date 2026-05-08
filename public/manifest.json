@@ -1,0 +1,45 @@
+{
+  "name": "AlphaFlow",
+  "short_name": "AlphaFlow",
+  "description": "Intelligent Danish bookkeeping — Skat & Moms for moderne virksomheder",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#f8faf9",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to Dashboard",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ny postering",
+      "short_name": "Ny postering",
+      "description": "Opret ny postering",
+      "url": "/?action=new-transaction",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Fakturaer",
+      "short_name": "Fakturaer",
+      "description": "Se alle fakturaer",
+      "url": "/?action=view-invoices",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "lang": "da",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}
