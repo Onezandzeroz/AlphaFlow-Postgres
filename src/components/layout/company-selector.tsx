@@ -2,7 +2,7 @@
 
 import { useAuthStore, CompanyInfo } from '@/lib/auth-store';
 import { useState, useRef, useEffect } from 'react';
-import { Building2, ChevronDown, Check } from 'lucide-react';
+import { Building2, ChevronDown, Check, Shield } from 'lucide-react';
 
 export function CompanySelector() {
   const user = useAuthStore(state => state.user);
@@ -13,6 +13,9 @@ export function CompanySelector() {
   const companies = (user?.companies || []).filter(c => !c.isDemo);
   const activeCompanyId = user?.activeCompanyId;
   const activeCompanyName = user?.activeCompanyName;
+
+  // Show App Owner badge when SuperDev is on the AlphaAi company
+  const showAppOwnerBadge = user?.isSuperDev === true && activeCompanyName === 'AlphaAi';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -32,6 +35,12 @@ export function CompanySelector() {
         <div className="flex items-center gap-2 text-sm font-medium text-[#1a2e2a] dark:text-[#e2e8e6]">
           <Building2 className="h-4 w-4 text-[#0d9488] shrink-0" />
           <span className="truncate">{activeCompanyName || 'No Company'}</span>
+          {showAppOwnerBadge && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-0.5 shrink-0">
+              <Shield className="h-2.5 w-2.5" />
+              App Owner
+            </span>
+          )}
           {user?.isDemoCompany && (
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 uppercase tracking-wider">
               Demo
@@ -51,6 +60,12 @@ export function CompanySelector() {
       >
         <Building2 className="h-4 w-4 text-[#0d9488] shrink-0" />
         <span className="truncate flex-1 text-left">{activeCompanyName || 'Select Company'}</span>
+        {showAppOwnerBadge && (
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-0.5 shrink-0">
+            <Shield className="h-2.5 w-2.5" />
+            App Owner
+          </span>
+        )}
         {user?.isDemoCompany && (
           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 uppercase tracking-wider shrink-0">
             Demo
@@ -61,28 +76,39 @@ export function CompanySelector() {
 
       {open && (
         <div className="mt-1 -mx-2 bg-white dark:bg-[#1a2520] rounded-md border border-[#e2e8e6] dark:border-[#2a3330] shadow-lg z-50 overflow-hidden">
-          {companies.map((company: CompanyInfo) => (
-            <button
-              key={company.id}
-              type="button"
-              onClick={() => {
-                if (company.id !== activeCompanyId) {
-                  switchCompany(company.id);
-                }
-                setOpen(false);
-              }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-[#f0f7f5] dark:hover:bg-[#222e2a] transition-colors ${
-                company.id === activeCompanyId ? 'bg-[#f0f7f5] dark:bg-[#1a2e28] text-[#0d9488]' : 'text-[#1a2e2a] dark:text-[#e2e8e6]'
-              }`}
-            >
-              <Building2 className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate flex-1">{company.name}</span>
-              {company.id === activeCompanyId && (
-                <Check className="h-3.5 w-3.5 text-[#0d9488] shrink-0" />
-              )}
-              <span className="text-[10px] text-[#6b7c75] uppercase tracking-wider">{company.role}</span>
-            </button>
-          ))}
+          {companies.map((company: CompanyInfo) => {
+            const isAppOwnerItem = user?.isSuperDev === true && company.name === 'AlphaAi';
+            return (
+              <button
+                key={company.id}
+                type="button"
+                onClick={() => {
+                  if (company.id !== activeCompanyId) {
+                    switchCompany(company.id);
+                  }
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-[#f0f7f5] dark:hover:bg-[#222e2a] transition-colors ${
+                  company.id === activeCompanyId ? 'bg-[#f0f7f5] dark:bg-[#1a2e28] text-[#0d9488]' : 'text-[#1a2e2a] dark:text-[#e2e8e6]'
+                }`}
+              >
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate flex-1">{company.name}</span>
+                {isAppOwnerItem && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-0.5 shrink-0">
+                    <Shield className="h-2 w-2" />
+                    App Owner
+                  </span>
+                )}
+                {company.id === activeCompanyId && (
+                  <Check className="h-3.5 w-3.5 text-[#0d9488] shrink-0" />
+                )}
+                {!isAppOwnerItem && (
+                  <span className="text-[10px] text-[#6b7c75] uppercase tracking-wider">{company.role}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

@@ -284,12 +284,12 @@ export function AppLayout({
         <div className="min-w-0 sidebar-label flex-1">
           <div className="flex items-center gap-1.5 truncate">
             <p className="text-sm font-medium text-[#1a1d1c] dark:text-[#e2e8e6] truncate">
-              {user.businessName?.replace(/\s*-\s*App-owner$/i, '') || t('user')}
+              {user.businessName || t('user')}
             </p>
-            {user.isSuperDev && user.businessName?.includes('App-owner') && (
+            {user.isSuperDev && (
               <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm">
                 <Shield className="h-2.5 w-2.5" />
-                {language === 'da' ? 'App Owner' : 'App Owner'}
+                App Owner
               </span>
             )}
           </div>
@@ -561,9 +561,9 @@ export function AppLayout({
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 truncate">
                       <p className="text-sm font-medium text-[#1a1d1c] dark:text-[#e2e8e6] truncate">
-                        {user.businessName?.replace(/\s*-\s*App-owner$/i, '') || t('user')}
+                        {user.businessName || t('user')}
                       </p>
-                      {user.isSuperDev && user.businessName?.includes('App-owner') && (
+                      {user.isSuperDev && (
                         <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm">
                           <Shield className="h-2.5 w-2.5" />
                           App Owner
