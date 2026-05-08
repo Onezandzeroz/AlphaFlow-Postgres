@@ -35,22 +35,61 @@ interface SendEmailOptions {
 }
 
 // ─── TRANSPORT ────────────────────────────────────────────────────
+// Lazy evaluation: SMTP config is read at SEND TIME, not at module load.
+// Next.js may import this module during the build phase when .env vars
+// are not yet available, which would permanently lock the transport to
+// jsonTransport (dev mode) even if SMTP is configured in production.
 
-const isSmtpConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+interface TransportResult {
+  transport: nodemailer.Transporter;
+  isSmtpConfigured: boolean;
+}
 
-const transport = isSmtpConfigured
-  ? nodemailer.createTransport({
+const _transportCache: { result: TransportResult | null; envSig: string | null } = {
+  result: null,
+  envSig: null,
+};
+
+function getTransport(): TransportResult {
+  const sig = `${process.env.SMTP_HOST}|${process.env.SMTP_USER}|${process.env.SMTP_PASS}|${process.env.SMTP_PORT}`;
+  // Re-use cached transport if env hasn't changed
+  if (_transportCache.result && _transportCache.envSig === sig) {
+    return _transportCache.result;
+  }
+
+  const configured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+  const result: TransportResult = configured
+    ? {
+        transport: nodemailer.createTransport({
+          host: process.env.SMTP_HOST!,
+          port: parseInt(process.env.SMTP_PORT || '587', 10),
+          secure: parseInt(process.env.SMTP_PORT || '587', 10) === 465,
+          auth: {
+            user: process.env.SMTP_USER!,
+            pass: process.env.SMTP_PASS!,
+          },
+        }),
+        isSmtpConfigured: true,
+      }
+    : {
+        transport: nodemailer.createTransport({ jsonTransport: true }),
+        isSmtpConfigured: false,
+      };
+
+  if (configured) {
+    logger.info('[EMAIL] SMTP transport created', {
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: parseInt(process.env.SMTP_PORT || '587', 10) === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
-  : nodemailer.createTransport({
-      jsonTransport: true,
+      port: process.env.SMTP_PORT || '587',
     });
+  } else {
+    logger.warn('[EMAIL] SMTP not configured — using dev mode (jsonTransport). No real emails will be sent.');
+  }
+
+  _transportCache.result = result;
+  _transportCache.envSig = sig;
+  return result;
+}
 
 const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@alphaai.dk';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
@@ -65,6 +104,8 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ success: bool
   const logId = crypto.randomUUID();
 
   try {
+    const { transport, isSmtpConfigured } = getTransport();
+
     const info = await transport.sendMail({
       from: EMAIL_FROM,
       to: opts.to,
@@ -94,7 +135,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ success: bool
     if (!isSmtpConfigured) {
       // jsonTransport returns the full mail object — cast to access it
       const envelope = (info as unknown as Record<string, unknown>).message;
-      logger.info(`[EMAIL-DEV] To: ${opts.to}`, {
+      logger.warn(`[EMAIL-DEV] To: ${opts.to}`, {
         subject: opts.subject,
         template: opts.template,
         logId,
@@ -102,7 +143,12 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ success: bool
       });
     }
 
-    logger.info(`[EMAIL] ${status}: to=${opts.to} template=${opts.template} logId=${logId}`);
+    // Use warn for dev-logged so it's visible in production logs
+    if (status === 'dev-logged') {
+      logger.warn(`[EMAIL] ${status}: to=${opts.to} template=${opts.template} logId=${logId}`);
+    } else {
+      logger.info(`[EMAIL] ${status}: to=${opts.to} template=${opts.template} logId=${logId}`);
+    }
     return { success: true, logId };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -63,6 +63,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Determine company name and check uniqueness BEFORE creating the user
+    // to avoid orphaned user records on company name collision
+    const companyName = businessName || normalizedEmail.split('@')[0];
+
+    // Enforce unique company name — no two tenants may share a name
+    const existingCompany = await db.company.findFirst({
+      where: { name: companyName },
+    });
+    if (existingCompany) {
+      return NextResponse.json(
+        { error: `A company named "${companyName}" already exists. Please choose a different business name.` },
+        { status: 409 }
+      );
+    }
+
     // Hash password with bcrypt
     const hashedPassword = await hashPassword(password);
 
@@ -79,20 +94,6 @@ export async function POST(request: NextRequest) {
         demoModeEnabled: true,
       },
     });
-
-    // Create a Company for the new user (multi-tenant)
-    const companyName = businessName || normalizedEmail.split('@')[0];
-
-    // Enforce unique company name — no two tenants may share a name
-    const existingCompany = await db.company.findFirst({
-      where: { name: companyName },
-    });
-    if (existingCompany) {
-      return NextResponse.json(
-        { error: `A company named "${companyName}" already exists. Please choose a different business name.` },
-        { status: 409 }
-      );
-    }
 
     // Inherit AppOwner widget defaults (AlphaAi company) for new tenant companies
     const appOwnerCompany = await db.company.findUnique({

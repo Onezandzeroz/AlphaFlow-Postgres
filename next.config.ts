@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     "*.space.z.ai",
     "*.space-z.ai",
   ],
-  serverExternalPackages: ["@prisma/client", "prisma", "node-cron", "archiver"],
+  serverExternalPackages: ["@prisma/client", "prisma", "node-cron", "archiver", "nodemailer"],
 
   // Security headers & feature policies — applied to all responses.
   // These headers protect the app regardless of whether it is served
