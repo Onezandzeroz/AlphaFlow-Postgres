@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useSyncExternalStore, memo } from 'react';
 import Image from 'next/image';
-import { User } from '@/lib/auth-store';
+import { User, useAuthStore } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
 import { useLanguageStore } from '@/lib/language-store';
 import { useTranslation } from '@/lib/use-translation';
@@ -708,12 +708,29 @@ export function AppLayout({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  fetch('/api/demo-mode', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'exit' }),
-                  }).then(() => window.location.reload());
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/demo-mode', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'exit' }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      // Update zustand store so localStorage has correct data on reload
+                      const currentUser = useAuthStore.getState().user;
+                      if (currentUser) {
+                        useAuthStore.getState().setUser({
+                          ...currentUser,
+                          demoModeEnabled: false,
+                          isDemoCompany: false,
+                          activeCompanyId: data.activeCompanyId ?? currentUser.activeCompanyId,
+                          activeCompanyName: data.activeCompanyName ?? currentUser.activeCompanyName,
+                        });
+                      }
+                      window.location.reload();
+                    }
+                  } catch { /* ignore */ }
                 }}
                 className="text-xs font-medium underline underline-offset-2 hover:text-teal-100 dark:hover:text-teal-200 whitespace-nowrap"
               >
@@ -735,12 +752,28 @@ export function AppLayout({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  fetch('/api/demo-mode', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'exit' }),
-                  }).then(() => window.location.reload());
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/demo-mode', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'exit' }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      const currentUser = useAuthStore.getState().user;
+                      if (currentUser) {
+                        useAuthStore.getState().setUser({
+                          ...currentUser,
+                          demoModeEnabled: false,
+                          isDemoCompany: false,
+                          activeCompanyId: data.activeCompanyId ?? currentUser.activeCompanyId,
+                          activeCompanyName: data.activeCompanyName ?? currentUser.activeCompanyName,
+                        });
+                      }
+                      window.location.reload();
+                    }
+                  } catch { /* ignore */ }
                 }}
                 className="text-xs font-medium underline underline-offset-2 hover:text-amber-100 dark:hover:text-amber-200 whitespace-nowrap"
               >

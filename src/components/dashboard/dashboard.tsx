@@ -411,7 +411,17 @@ export function Dashboard({ user, onNavigate, onboardingStepJustDone, onOnboardi
       if (res.ok) {
         const data = await res.json();
         setDemoModeEnabled(true);
-        setUser({ ...user, demoModeEnabled: true, isDemoCompany: true, activeCompanyId: data.activeCompanyId, activeCompanyName: data.activeCompanyName });
+        // Update zustand store immediately so localStorage has correct data on reload
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            demoModeEnabled: data.demoModeEnabled ?? true,
+            isDemoCompany: data.isDemoCompany ?? true,
+            activeCompanyId: data.activeCompanyId ?? currentUser.activeCompanyId,
+            activeCompanyName: data.activeCompanyName ?? currentUser.activeCompanyName,
+          });
+        }
         // Reload page to refresh all data with the new company context
         if (typeof window !== 'undefined') {
           window.location.reload();
@@ -433,6 +443,19 @@ export function Dashboard({ user, onNavigate, onboardingStepJustDone, onOnboardi
         body: JSON.stringify({ action }),
       });
       if (res.ok) {
+        const data = await res.json();
+        // Update zustand store immediately so localStorage has correct data on reload
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            demoModeEnabled: data.demoModeEnabled ?? false,
+            isDemoCompany: data.isDemoCompany ?? false,
+            activeCompanyId: data.activeCompanyId ?? currentUser.activeCompanyId,
+            activeCompanyName: data.activeCompanyName ?? currentUser.activeCompanyName,
+          });
+        }
+        setDemoModeEnabled(data.isDemoCompany === true);
         // Reload to refresh all data with the new company context
         if (typeof window !== 'undefined') {
           window.location.reload();
